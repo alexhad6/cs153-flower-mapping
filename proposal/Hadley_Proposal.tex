@@ -61,6 +61,8 @@ Another citation~\cite{Donaldson}.
 
 Third citation~\cite{Donkersley}.
 
+Fourth citation~\cite{Rzanny}.
+
 \section{Methods}
 
 The provided files include JPEG images taken by a drone, and corresponding JSON files that include annotations for the plants in the image. Each annotation includes a class (``EFRA'' for \textit{Eriogonum fasciculatum}) and a polygon representing the boundary of the plant. For an example, see Figure~\ref{fig:annotation}.
@@ -75,6 +77,12 @@ Given that the flowers
    \caption{An example of an included polygon annotation outlining a California buckwheat plant.}
    \label{fig:annotation}
 \end{figure}
+
+HSV thresholding, morphology, more ``classical'' approach
+
+Mask R-CNN ??
+
+Try thresholding as baseline, and Mask R-CNN, see if it can outperform thresholding.
 
 \section{Measuring success}
 
