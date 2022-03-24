@@ -69,7 +69,9 @@ The provided files include JPEG images taken by a drone, and corresponding JSON 
 
 I have already been able to visualize the annotations by adapting code written by Tom Fu, one of Prof. Donaldson's research students.\footnote{\url{https://github.com/tommyfuu/flower_map_new/blob/master/scripts/visualizePolygons.py}} The next step will be to convert the polygons into masks in order to isolate the portion of the image to analyze.
 
-Given that the flowers 
+Given that the flowers
+
+CNN, since flower features would probably work well in terms of dividing image into smaller parts
 
 \begin{figure}[t]
   \centering
@@ -90,6 +92,8 @@ Qualitative measure of the resulting masks
 Precision, recall as compared to annotated data
 
 \section{Challenges}
+
+Regions are not square or even rectangular. So for CNN, what to do with the extra space? Could just use bounding box, or a bounding square, but then not using the extra information that flowers must occur within the boundary. Could just use a square/rectangular crop and then discard annotations outside the boundary.
 
 Annotating all of the data. Within the data provided, there are 888 images including California buckwheat plants, and across all images there are 11,981 individual plants. It will be a challenge to annotate the enough of these images to train and test a model well. There is no need to annotate all of the raw data, but it would be good to use some images from each batch.
 
