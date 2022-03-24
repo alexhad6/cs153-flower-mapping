@@ -73,6 +73,10 @@ Given that the flowers
 
 CNN, since flower features would probably work well in terms of dividing image into smaller parts
 
+Idea: divide each plant into smaller regions, then pass those through Mask R-CNN
+
+Don't have to annotate all images, but sample randomly from the 8 regions/experiments
+
 \begin{figure}[t]
   \centering
    \includegraphics[width=0.9\linewidth]{annotation.jpg}
@@ -91,9 +95,18 @@ Try thresholding as baseline, and Mask R-CNN, see if it can outperform threshold
 Qualitative measure of the resulting masks
 Precision, recall as compared to annotated data
 
+Baseline model could be HSV thresholding
+
 \section{Challenges}
 
 Regions are not square or even rectangular. So for CNN, what to do with the extra space? Could just use bounding box, or a bounding square, but then not using the extra information that flowers must occur within the boundary. Could just use a square/rectangular crop and then discard annotations outside the boundary.
+
+Could take bounding rectangle, divide into regions of some regular size, run through CNN to get masks of flowers, then discard predictions outside the bounding polygon
+Idea: detecting flowers on plant are roughly translationally symmetric. We already know we're on a plant, so we can divide it up
+
+Challenge from that: if flowers are at the edge
+Solution: could make squares overlap, then only take mask from inner square region, or some sort of union of overlapping masks
+Overlapping masks, union them together in the end
 
 Annotating all of the data. Within the data provided, there are 888 images including California buckwheat plants, and across all images there are 11,981 individual plants. It will be a challenge to annotate the enough of these images to train and test a model well. There is no need to annotate all of the raw data, but it would be good to use some images from each batch.
 
