@@ -1,6 +1,7 @@
 # Image data folders
 data/
 annotated/
+processed/
 
 # Misc
 .DS_Store
