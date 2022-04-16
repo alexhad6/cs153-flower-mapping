@@ -5,9 +5,10 @@ name = "pypi"
 
 [packages]
 numpy = "*"
-matplotlib = "*"
 notebook = "*"
 opencv-python = "*"
+torch="*"
+torchvision="*"
 
 [dev-packages]
 
