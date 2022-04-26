@@ -9,6 +9,9 @@ notebook = "*"
 opencv-python = "*"
 torch="*"
 torchvision="*"
+matplotlib = "*"
+cython = "*"
+pydensecrf = {git = "https://github.com/lucasb-eyer/pydensecrf.git"}
 
 [dev-packages]
 

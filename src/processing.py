@@ -1,70 +1,64 @@
 import os
+import numpy as np
 import cv2
-from location import Location
 
-# Parameters
-DATA_DIR = '../data'
-ANNOTATED_DIR = '../annotated'
-OUTPUT_DIR = '../processed'
-OUTPUT_DIRS = {
-    'data': f'{OUTPUT_DIR}/data',
-    'mask': f'{OUTPUT_DIR}/masks',
-    'masked_image': f'{OUTPUT_DIR}/masked_images',
-    'tile': f'{OUTPUT_DIR}/tiles',
-    'tile_mask': f'{OUTPUT_DIR}/tile_masks',
-    'tile_annotation': f'{OUTPUT_DIR}/tile_annotations',
-}
-JSON_EXT = 'json'
-IMAGE_EXT = 'JPG'
-PLANT_TYPE = 'ERFA'
-TILE_SIZE = 256
-TILE_OVERLAP = 0.25
+import utils
+import data
 
-# Create output directories
-for directory in OUTPUT_DIRS.values():
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+def generate_clean_annotation(plant):
+    annotation_image = utils.load_image(plant.raw_annotation_path)
+    mask = ((annotation_image.sum(axis=2) > 70) * 255).astype(np.uint8)
+    kernel = np.ones((3, 3), np.uint8)
+    opened_mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    utils.write_image(opened_mask, plant.annotation_path)
 
-# Create location objects
-locations = {
-    location_name: Location(
-        location_name,
-        DATA_DIR,
-        OUTPUT_DIRS,
-        PLANT_TYPE,
-        JSON_EXT,
-        IMAGE_EXT,
-        TILE_SIZE,
-        TILE_OVERLAP,
-    )
-    for location_name in os.listdir(DATA_DIR)
-    if os.path.isdir(os.path.join(DATA_DIR, location_name))
-}
+def process_plant(plant):
+    # Generate mask
+    plant_data = utils.load_json(plant.drone_image_data_path)['labels'][plant.id]
+    segment = utils.process_segment(plant_data['segment'])
+    drone_image = utils.load_image(plant.drone_image_path)
+    mask = cv2.fillPoly(np.zeros(drone_image.shape[:2]), segment, color=255)
+    x_min, y_min, x_max, y_max = utils.compute_bounding_box(mask)
+    mask_cropped = mask[y_min:y_max, x_min:x_max]
+    utils.write_image(mask_cropped, plant.mask_path)
+    mask_cropped_bgr = np.repeat(mask_cropped[:, :, np.newaxis], 3, axis=2)
+    masked_image_cropped = drone_image[y_min:y_max, x_min:x_max,:] * (mask_cropped_bgr / 255)
+    utils.write_image(masked_image_cropped, plant.masked_image_path)
 
-def generate_annotated():
-    for file_name in os.listdir(ANNOTATED_DIR):
-        name, ext = os.path.splitext(file_name)
-        name_components = name.split('_')
-        drone_image_name = '_'.join(name_components[:-4])
-        plant_id, x, y = (int(n) for n in name_components[-4:-1])
-        for location in locations.values():
-            if drone_image_name in location.drone_images:
-                break
-        drone_image = location.drone_images[drone_image_name]
-        plant = drone_image.plants[plant_id]
-        plant.generate(cv2.imread(f'{ANNOTATED_DIR}/{file_name}'))
-        plant_x, plant_y, _, _ = plant.data['bbox']
-        if x != plant_x or y != plant_y:
-            print(f'x: {x}, y: {y}, plant_x: {plant_x}, plant_y: {plant_y}')
+    # Verify that mask x, y, and dimensions match annotation
+    annotation_image = utils.load_image(plant.annotation_path)
+    assert x_min == plant.x
+    assert y_min == plant.y
+    assert annotation_image.shape[:2] == mask_cropped.shape
+
+    # Generate tiles
+    tile_positions = []
+    tile_regions = utils.compute_tile_regions(x_max - x_min, y_max - y_min)
+    for tile_id, tile_region in enumerate(tile_regions):
+        tile_position, tile_mask, tile, tile_annotation = utils.compute_tile(
+            tile_region,
+            mask_cropped,
+            masked_image_cropped,
+            annotation_image,
+        )
+        tile_positions.append([int(n) for n in tile_position])
+        utils.write_image(tile_mask, plant.tile_mask_path(tile_id))
+        utils.write_image(tile, plant.tile_path(tile_id))
+        utils.write_image(tile_annotation, plant.tile_annotation_path(tile_id))
+
+    # Write info to JSON
+    utils.write_json({
+        'plant_area': np.count_nonzero(mask),
+        'flower_area': np.count_nonzero(annotation_image),
+        'bounding_box': [int(n) for n in (x_min, y_min, x_max, y_max)],
+        'tile_positions': tile_positions,
+    }, plant.data_path)
+
+def main():
+    utils.generate_dirs()
+    for plant in data.plants:
+        generate_clean_annotation(plant)
+        process_plant(plant)
 
 if __name__ == '__main__':
-    generate_annotated()
-
-
-########## OLDER FUNCTIONS ##########
-
-# def add_annotation(image, boundary, bbox, plant_id, color=(0, 0, 255), thickness=8):
-#     x_min, y_min, x_max, y_max = bbox
-#     pos = ((x_max+x_min)//2, (y_max+y_min)//2)
-#     cv2.polylines(image, boundary, isClosed=True, color=color, thickness=thickness)
-#     cv2.putText(image, str(plant_id), pos, fontFace=0, fontScale=3, color=color, thickness=thickness)
+   main()

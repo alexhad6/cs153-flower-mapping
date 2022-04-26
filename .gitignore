@@ -1,7 +1,8 @@
-# Image data folders
+# Image and model directories
 data/
-annotated/
+annotations/
 processed/
+model/
 
 # Misc
 .DS_Store
