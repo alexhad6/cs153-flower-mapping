@@ -35,8 +35,10 @@ def generate_hsv_masks(lower_thresh=[0, 0, 200], upper_thresh=[125, 75, 255]):
     total_true_negatives = 0
     total_false_positives = 0
     total_false_negatives = 0
-    sum_abs_percent_error = 0
-    sum_squared_percent_error = 0
+    sum_abs_error = 0
+    sum_squared_error = 0
+    total_flower_area = 0
+    total_plant_area = 0
     for plant in data.plants:
         image = utils.load_image(plant.masked_image_path)
         image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -46,24 +48,30 @@ def generate_hsv_masks(lower_thresh=[0, 0, 200], upper_thresh=[125, 75, 255]):
         hsv_mask = cv2.morphologyEx(hsv_mask, cv2.MORPH_OPEN, kernel)
         utils.write_image(hsv_mask, plant.hsv_mask_path)
 
+        # Load plant data
+        plant_data = utils.load_json(plant.data_path)
+        flower_area = plant_data['flower_area']
+        plant_area = plant_data['plant_area']
+
         # Update pixel counts
         h, w = hsv_mask.shape
-        total_pixels = w * h
-        true_mask = utils.load_image(plant.annotation_path)[:, :, 0]
+        outside_pixels = (w * h) - plant_area
+        annotation_mask = utils.load_image(plant.annotation_path)[:, :, 0]
         positives = np.count_nonzero(hsv_mask)
-        true_positives = np.count_nonzero(cv2.bitwise_and(hsv_mask, true_mask))
-        true_negatives = np.count_nonzero(cv2.bitwise_not(cv2.bitwise_or(hsv_mask, true_mask)))
+        true_positives = np.count_nonzero(cv2.bitwise_and(hsv_mask, annotation_mask))
+        true_negatives = np.count_nonzero(cv2.bitwise_not(cv2.bitwise_or(hsv_mask, annotation_mask))) - outside_pixels
         total_true_positives += true_positives
         total_true_negatives += true_negatives
         total_false_positives += positives - true_positives
-        total_false_negatives += total_pixels - positives - true_negatives
+        total_false_negatives += plant_area - positives - true_negatives
 
-        # Update sum of squared errors
-        plant_data = utils.load_json(plant.data_path)
+        # Update flower area error sums
         hsv_flower_area = np.count_nonzero(hsv_mask)
-        area_percent_error = (hsv_flower_area - plant_data['flower_area']) / plant_data['plant_area']
-        sum_abs_percent_error += abs(area_percent_error)
-        sum_squared_percent_error += area_percent_error ** 2
+        error = (hsv_flower_area - flower_area)
+        sum_abs_error += abs(error)
+        sum_squared_error += error ** 2
+        total_flower_area += flower_area
+        total_plant_area += plant_area
 
         # Load area back into plant data
         plant_data['hsv_flower_area'] = hsv_flower_area
@@ -74,19 +82,27 @@ def generate_hsv_masks(lower_thresh=[0, 0, 200], upper_thresh=[125, 75, 255]):
     precision = total_true_positives / (total_true_positives + total_false_positives)
     recall = total_true_positives / (total_true_positives + total_false_negatives)
     F1 = 2 * (recall * precision) / (recall + precision)
-    print('Mask Error')
-    print(f"  {'Accuracy':<10} {accuracy:>8.2%}")
-    print(f"  {'Precision':<10} {precision:>8.2%}")
-    print(f"  {'Recall':<10} {recall:>8.2%}")
-    print(f"  {'F1':<10} {F1:>8.2%}")
+    print('Flower mask')
+    print(f"  {'Accuracy':<25} {accuracy:>10.2%}")
+    print(f"  {'Precision':<25} {precision:>10.2%}")
+    print(f"  {'Recall':<25} {recall:>10.2%}")
+    print(f"  {'F1':<25} {F1:>10.2%}")
     print()
 
-    # RMSPE and MAPE
-    RMSPE = (sum_squared_percent_error / len(data.plants)) ** 0.5
-    MAPE = sum_abs_percent_error / len(data.plants)
-    print('Area error')
-    print(f"  {'RMSPE':<10} {RMSPE:>8.2%}")
-    print(f"  {'MAPE':<10} {MAPE:>8.2%}")
+    # Area errors
+    mean_flower_area = total_flower_area / len(data.plants)
+    mean_plant_area = total_plant_area / len(data.plants)
+    RMSE = (sum_squared_error / len(data.plants)) ** 0.5
+    MAE = sum_abs_error / len(data.plants)
+    print('Area')
+    print(f"  {'mean flower area':<25} {mean_flower_area:>10.2f}")
+    print(f"  {'mean plant area':<25} {mean_plant_area:>10.2f}")
+    print(f"  {'RMSE':<25} {RMSE:>10.2f}")
+    print(f"  {'MAE':<25} {MAE:>10.2f}")
+    print(f"  {'RMSE / (mean flower area)':<25} {RMSE / mean_flower_area:>10.2%}")
+    print(f"  {'MAE  / (mean flower area)':<25} {MAE / mean_flower_area:>10.2%}")
+    print(f"  {'RMSE / (mean plant area)':<25} {RMSE / mean_plant_area:>10.2%}")
+    print(f"  {'MAE  / (mean plant area)':<25} {MAE / mean_plant_area:>10.2%}")
     print()
 
 if __name__ == '__main__':

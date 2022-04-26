@@ -26,7 +26,7 @@ def process_plant(plant):
     utils.write_image(masked_image_cropped, plant.masked_image_path)
 
     # Verify that mask x, y, and dimensions match annotation
-    annotation_image = utils.load_image(plant.annotation_path)
+    annotation_image = utils.load_image(plant.annotation_path)[:, :, 0]
     assert x_min == plant.x
     assert y_min == plant.y
     assert annotation_image.shape[:2] == mask_cropped.shape
@@ -48,7 +48,7 @@ def process_plant(plant):
 
     # Write info to JSON
     utils.write_json({
-        'plant_area': np.count_nonzero(mask),
+        'plant_area': np.count_nonzero(mask_cropped),
         'flower_area': np.count_nonzero(annotation_image),
         'bounding_box': [int(n) for n in (x_min, y_min, x_max, y_max)],
         'tile_positions': tile_positions,
