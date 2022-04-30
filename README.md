@@ -2,6 +2,17 @@
 
 Flower mapping final project for CS 153 at Harvey Mudd College.
 
+## Downloads
+
+The following files can be downloaded. We have included the annotations we used, along with their corresponding masked images. Note that the code in this repository expects all of the data to be present in order to generate the tiles used for training (see __Setup__ below). In theory, the code could be adjusted to generate everything using these masked images, but in order to be more general to other datasets and annotations, we left it expecting all the data.
+
+- [Annotations](https://github.com/alexhad6/cs153-flower-mapping/releases/download/v1.0.0/annotations.tgz)
+- [Masked Images](https://github.com/alexhad6/cs153-flower-mapping/releases/download/v1.0.0/masked_images.tgz)
+
+The weights for our trained models (see the training and running model sections below) can be downloaded here.
+
+- [Model Weights](https://github.com/alexhad6/cs153-flower-mapping/releases/download/v1.0.0/model_weights.tgz)
+
 ## Setup
 
 Follow the steps below to set up the repository.
