@@ -30,16 +30,26 @@ def show_hsv_histogram():
         h_hist_nonflower += np.histogram(nonflower_pixels_hsv[:, 0], bins=bins)[0]
         s_hist_nonflower += np.histogram(nonflower_pixels_hsv[:, 1], bins=bins)[0]
         v_hist_nonflower += np.histogram(nonflower_pixels_hsv[:, 2], bins=bins)[0]
-    fig, (h_ax, s_ax, v_ax) = plt.subplots(1, 3)
-    h_ax.set_title('H')
-    s_ax.set_title('S')
-    v_ax.set_title('V')
-    h_ax.bar(bins[:-1], h_hist_nonflower)
-    h_ax.bar(bins[:-1], h_hist)
-    s_ax.bar(bins[:-1], s_hist_nonflower)
-    s_ax.bar(bins[:-1], s_hist)
-    v_ax.bar(bins[:-1], v_hist_nonflower)
-    v_ax.bar(bins[:-1], v_hist)
+    fig, (h_ax, s_ax, v_ax) = plt.subplots(1, 3, sharey=True)
+    h_ax.set_title('H', fontsize=20)
+    s_ax.set_title('S', fontsize=20)
+    v_ax.set_title('V', fontsize=20)
+    width = 1
+    alpha = 0.75
+    xticks = [0, 75, 125, 200, 255]
+    h_ax.bar(bins[:-1], h_hist_nonflower / h_hist_nonflower.max(), width=width, alpha=alpha)
+    h_ax.bar(bins[:-1], h_hist / h_hist.max(), width=width, alpha=alpha)
+    s_ax.bar(bins[:-1], s_hist_nonflower / s_hist_nonflower.max(), width=width, alpha=alpha)
+    s_ax.bar(bins[:-1], s_hist / s_hist.max(), width=width, alpha=alpha)
+    v_ax.bar(bins[:-1], v_hist_nonflower / v_hist_nonflower.max(), width=width, alpha=alpha)
+    v_ax.bar(bins[:-1], v_hist / v_hist.max(), width=width, alpha=alpha)
+    h_ax.set_xticks(xticks)
+    s_ax.set_xticks(xticks)
+    v_ax.set_xticks(xticks)
+    h_ax.xaxis.set_tick_params(labelsize=13)
+    h_ax.yaxis.set_tick_params(labelsize=13)
+    s_ax.xaxis.set_tick_params(labelsize=13)
+    v_ax.xaxis.set_tick_params(labelsize=13)
     plt.show()
 
 if __name__ == '__main__':

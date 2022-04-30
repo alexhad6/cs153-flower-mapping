@@ -61,7 +61,7 @@ def generate_model_masks(model):
         total_plant_area += plant_area
 
         # Load area back into plant data
-        plant_data['model_flower_area'] = model_flower_area
+        plant_data['deeplabv3_flower_area'] = model_flower_area
         utils.write_json(plant_data, plant.data_path)
 
     # Mask statistics
