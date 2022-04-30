@@ -2,6 +2,8 @@ import os
 import config
 
 class Plant:
+    '''Class for plant file paths.'''
+
     def __init__(self, plant_id, location, drone_image_name, raw_annotation_file, x, y):
         self.id = plant_id
         self.x = x
@@ -68,6 +70,13 @@ class Plant:
             f'{self._plant_name}.{config.OUTPUT_IMAGE_EXT}',
         )
 
+    @property
+    def deeplabv2_mask_path(self):
+        return os.path.join(
+            config.DIRS['processed']['deeplabv2_masks'],
+            f'{self._plant_name}.{config.OUTPUT_IMAGE_EXT}',
+        )
+
     def tile_path(self, tile_id):
         return os.path.join(
             config.DIRS['processed']['tiles'],
@@ -86,6 +95,7 @@ class Plant:
             f'{self._tile_name.format(tile_id=tile_id)}.{config.OUTPUT_IMAGE_EXT}',
         )
 
+# Create a dictionary of locations based on data subdirectories
 locations = {
     location: {
         drone_image_name
@@ -95,10 +105,14 @@ locations = {
         )
     }
     for location in os.listdir(config.DIRS['data'])
+    if os.path.isdir(os.path.join(config.DIRS['data'], location))
 }
 
+# Create a dictionary of plants for each location
 plants_by_location = {location: [] for location in locations}
 for annotation_file in os.listdir(config.DIRS['annotations']):
+    if annotation_file == '.gitkeep':
+        continue
     name, ext = os.path.splitext(annotation_file)
     name_components = name.split('_')
     drone_image_name = '_'.join(name_components[:-4])
@@ -115,6 +129,7 @@ for annotation_file in os.listdir(config.DIRS['annotations']):
         y,
     ))
 
+# Create a list of plants from all locations
 plants = [
     plant
     for location_plants in plants_by_location.values()

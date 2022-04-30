@@ -1,6 +1,5 @@
 from deeplab.models import DeepLabV2_ResNet101_MSC
 from deeplab.models.deeplabv2 import _ASPP
-from deeplab.utils import DenseCRF
 
 def ASPP(n_classes):
     ch = [64 * 2 ** p for p in range(6)]

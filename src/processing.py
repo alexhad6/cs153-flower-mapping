@@ -2,8 +2,10 @@ import os
 import numpy as np
 import cv2
 
+# Local imports
 import utils
 import data
+import config
 
 def generate_clean_annotation(plant):
     annotation_image = utils.load_image(plant.raw_annotation_path)
@@ -54,11 +56,8 @@ def process_plant(plant):
         'tile_positions': tile_positions,
     }, plant.data_path)
 
-def main():
+if __name__ == '__main__':
     utils.generate_dirs()
     for plant in data.plants:
         generate_clean_annotation(plant)
         process_plant(plant)
-
-if __name__ == '__main__':
-   main()

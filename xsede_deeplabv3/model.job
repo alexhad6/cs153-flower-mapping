@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH -N 1
+#SBATCH -t 0:30:00
+#SBATCH -p GPU-shared
+#SBATCH --gpus=1
+#SBATCH --mail-type=ALL
+
+module purge
+module load AI/anaconda3-tf1.2020.11
+source activate $AI_ENV
+
+cd /ocean/projects/cis220010p/ahadley/xsede_deeplabv3
+python3 src/deeplabv3/main.py --data-directory data --exp_directory experiment --epochs 25 > output.txt

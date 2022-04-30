@@ -1,8 +1,12 @@
 # Image and model directories
-data/
-annotations/
-processed/
-model/
+/data/*/
+/annotations/*.png
+/annotations/*.JPG
+/processed/
+/model/
+/xsede_deeplabv2/data/
+/xsede_deeplabv2/model/
+/xsede_deeplabv3/data/
 
 # Misc
 .DS_Store

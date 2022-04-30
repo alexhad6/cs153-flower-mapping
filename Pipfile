@@ -12,6 +12,8 @@ torchvision="*"
 matplotlib = "*"
 cython = "*"
 pydensecrf = {git = "https://github.com/lucasb-eyer/pydensecrf.git"}
+pillow = "*"
+sklearn = "*"
 
 [dev-packages]
 
