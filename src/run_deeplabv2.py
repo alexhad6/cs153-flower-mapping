@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import config
 import utils
 import data
-import deeplab
+import deeplabv2
 
 # Get PyTorch device (CPU or GPU)
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')

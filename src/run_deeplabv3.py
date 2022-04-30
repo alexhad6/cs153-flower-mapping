@@ -1,45 +1,22 @@
-import os
 import numpy as np
-import cv2
 import torch
-import torch.nn.functional as F
-import matplotlib.pyplot as plt
+import cv2
 
 # Local imports
 import config
 import utils
 import data
-import deeplab
 
 # Get PyTorch device (CPU or GPU)
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 def run_model(model, raw_image):
-    # Adapted from https://github.com/kazuto1011/deeplab-pytorch/blob/master/demo.py
-    image = raw_image.astype(np.float32)
-    image -= np.array([
-        config.COCOSTUFF_MEAN['b'],
-        config.COCOSTUFF_MEAN['g'],
-        config.COCOSTUFF_MEAN['r'],
-    ])
-    image_tensor = torch.from_numpy(image.transpose(2, 0, 1)).float().unsqueeze(0)
-    image_tensor.to(device)
+    # Adapted from https://github.com/msminhas93/DeepLabv3FineTuning/blob/master/Analysis.ipynb
+    img = raw_image.transpose(2, 0, 1)
+    img = np.expand_dims(img, axis=0)
     with torch.no_grad():
-        logits = model(image_tensor)
-    _, _, h, w = image_tensor.shape
-    logits = F.interpolate(logits, size=(h, w), mode='bilinear', align_corners=False)
-    probs = F.softmax(logits, dim=1)[0]
-    probs = probs.cpu().numpy()
-    postprocessor = deeplab.DenseCRF(
-        iter_max=config.CRF['iter_max'],
-        pos_xy_std=config.CRF['pos_xy_std'],
-        pos_w=config.CRF['pos_w'],
-        bi_xy_std=config.CRF['bi_xy_std'],
-        bi_rgb_std=config.CRF['bi_rgb_std'],
-        bi_w=config.CRF['bi_w'],
-    )
-    probs = postprocessor(raw_image, probs)
-    label_map = np.argmax(probs, axis=0)
+        a = model(torch.from_numpy(img).type(torch.FloatTensor)/255)
+    label_map = a['out'].cpu().detach().numpy()[0][0] > 0.2
     return label_map
 
 def generate_model_masks(model):
@@ -56,7 +33,7 @@ def generate_model_masks(model):
         plant_image = utils.load_image(plant.masked_image_path)
         label_map = run_model(model, plant_image)
         mask = (label_map * 255).astype(np.uint8)
-        utils.write_image(mask, plant.model_mask_path)
+        utils.write_image(mask, plant.deeplabv3_mask_path)
 
         # Load plant data
         plant_data = utils.load_json(plant.data_path)
@@ -117,9 +94,6 @@ def generate_model_masks(model):
     print()
 
 if __name__ == '__main__':
-    model = deeplab.DeepLabV2_ResNet101_MSC(n_classes=2)
-    state_dict = torch.load(config.MODEL_PATH, map_location=lambda storage, loc: storage)
-    model.load_state_dict(state_dict)
-    model.to(device)
+    model = torch.load(config.DEEPLABV3_PATH, map_location=lambda storage, loc: storage)
     model.eval()
     generate_model_masks(model)

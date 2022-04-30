@@ -77,6 +77,13 @@ class Plant:
             f'{self._plant_name}.{config.OUTPUT_IMAGE_EXT}',
         )
 
+    @property
+    def deeplabv3_mask_path(self):
+        return os.path.join(
+            config.DIRS['processed']['deeplabv3_masks'],
+            f'{self._plant_name}.{config.OUTPUT_IMAGE_EXT}',
+        )
+
     def tile_path(self, tile_id):
         return os.path.join(
             config.DIRS['processed']['tiles'],
